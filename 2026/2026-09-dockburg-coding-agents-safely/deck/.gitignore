@@ -1,0 +1,5 @@
+shots/
+shots-*/
+shots-verify/
+node_modules/
+dist/
