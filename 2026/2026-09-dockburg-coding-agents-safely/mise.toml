@@ -1,0 +1,3 @@
+[tools]
+"github:smol-machines/smolvm" = "latest"
+nono = "latest"
