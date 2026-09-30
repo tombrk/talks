@@ -426,3 +426,16 @@ code, .mono { font-family: var(--f-mono); }
 .p-n { font-family: var(--f-mono); color: var(--orange); width: 24px; }
 .p-t { overflow: hidden; text-overflow: ellipsis; }
 .p-keys { font-family: var(--f-mono); font-size: 12px; opacity: 0.45; }
+
+/* print (scripts/pdf.mjs + ?print): every slide, fully built, one 1920×1080 page each */
+html:has(.print-deck), html:has(.print-deck) body, html:has(.print-deck) #root { height: auto; overflow: visible; }
+.print-page { position: relative; width: 1920px; height: 1080px; overflow: hidden; break-after: page; }
+.print-page > .chrome-bar { z-index: 5; }
+.print-page .frame { --s: 1 !important; }
+.print-page .stage { left: 0; top: 0; transform: none; }
+@media print {
+  @page { size: 1920px 1080px; margin: 0; }
+  .bg-grain, .bg-grid-hi { display: none !important; }
+  /* filters and blend modes would force whole layers into bitmaps */
+  *, *::before, *::after { filter: none !important; backdrop-filter: none !important; mix-blend-mode: normal !important; }
+}

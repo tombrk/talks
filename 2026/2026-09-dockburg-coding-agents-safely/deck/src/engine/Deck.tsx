@@ -2,11 +2,13 @@ import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExt
 import { MotionConfig } from 'motion/react';
 import { Controller } from './controller';
 import { Frame } from './Frame';
-import { Chrome } from './Chrome';
+import { Chrome, ChromeBar } from './Chrome';
 import { SlideContext } from './anim';
 import { chapters, type SlideDef } from './types';
 
 const SHOTS = new URLSearchParams(location.search).has('shots');
+/** ?print: every slide at once, fully built, one per page (scripts/pdf.mjs) */
+const PRINT = new URLSearchParams(location.search).has('print');
 
 const SlideView = memo(function SlideView({
   def,
@@ -33,6 +35,26 @@ const SlideView = memo(function SlideView({
 });
 
 export function Deck({ slides }: { slides: SlideDef[] }) {
+  if (PRINT) return <PrintDeck slides={slides} />;
+  return <LiveDeck slides={slides} />;
+}
+
+function PrintDeck({ slides }: { slides: SlideDef[] }) {
+  return (
+    <MotionConfig reducedMotion="always">
+      <div className="print-deck">
+        {slides.map((s, i) => (
+          <section key={s.id} className="print-page">
+            <SlideView def={s} index={i} step={Math.max(1, s.steps ?? 1) - 1} active shown />
+            {i > 0 && <ChromeBar theme={s.theme} index={i} total={slides.length} />}
+          </section>
+        ))}
+      </div>
+    </MotionConfig>
+  );
+}
+
+function LiveDeck({ slides }: { slides: SlideDef[] }) {
   const ctrl = useMemo(() => new Controller(slides, 'deck'), [slides]);
   const state = useSyncExternalStore(ctrl.subscribe, ctrl.getState);
   const ref = useRef<HTMLDivElement>(null);
@@ -97,7 +119,7 @@ export function Deck({ slides }: { slides: SlideDef[] }) {
           return (
             <section
               key={s.id}
-              className={`slide${near ? '' : ' is-far'}${leaving ? ' is-leaving' : ''}${leaving && back ? ' is-back' : ''}`}
+              className={`slide${active ? ' is-current' : ''}${near ? '' : ' is-far'}${leaving ? ' is-leaving' : ''}${leaving && back ? ' is-back' : ''}`}
               style={leaving && back ? ({ '--back': state.from - state.index } as React.CSSProperties) : undefined}
               data-slide={s.id}
               onAnimationEnd={leaving ? (e) => e.target === e.currentTarget && ctrl.leaveDone() : undefined}
